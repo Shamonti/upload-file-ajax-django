@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Upload</title>
+  </head>
+  <body>
+    <h1>Upload a File</h1>
+    <input type="file" id="fileUpload" />
+    <button id="submitButton">Upload</button>
+    <div id="message"></div>
+
+    <script>
+      $(document).ready(function () {
+        $('#submitButton').click(function (e) {
+          e.preventDefault(); // Prevent default form submission
+
+          var file = $('#fileUpload')[0].files[0];
+
+          if (file) {
+            var formData = new FormData();
+            formData.append('file', file);
+
+            $.ajax({
+              url: "{% url 'upload_file' %}", // Replace with your URL pattern name
+              type: 'POST',
+              data: formData,
+              processData: false,
+              contentType: false,
+              success: function (response) {
+                $('#message').text(response);
+              },
+              error: function (error) {
+                $('#message').text(
+                  'Error uploading file: ' + error.responseText
+                );
+              },
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
