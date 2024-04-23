@@ -1,40 +1,47 @@
 from django.shortcuts import render, HttpResponse
 from django.core.files.storage import default_storage
-
-# Create your views here.
-def say_hello(request):
-  # return HttpResponse('Hello world');
-  return render(request, 'hello.html', {'name' : 'Shamonti'})
-
-def file_upload(request):
-  # return HttpResponse('Hello world');
-  return render(request, 'upload.html')
-
+from .models import UploadedFile  # Import your model (replace with your actual model path)
+import psycopg2  # Import psycopg2 for PostgreSQL connection
 
 def upload_file(request):
   if request.method == 'POST':
     uploaded_file = request.FILES['file']
+
     # File validation (optional):
     # Check for supported file types, size limits, etc.
+    # if uploaded_file.size > 1048576 (1 MB):  # Example size limit
+    #     return HttpResponseBadRequest("File size exceeds limit (1 MB)")
 
-    # Save uploaded file:
-    filename = default_storage.save(uploaded_file.name, uploaded_file)
-    # Alternatively, use a custom storage backend for specific locations
-    # filepath = os.path.join(settings.MEDIA_ROOT, filename)
-    # with open(filepath, 'wb+') as destination:
-    #     for chunk in uploaded_file.chunks():
-    #         destination.write(chunk)
+    try:
+      # Save uploaded file:
+      filename = default_storage.save(uploaded_file.name, uploaded_file)
 
-    # Database connection and information storage (optional)
-    # ... (implement your database logic here) ...
+      # Connect to PostgreSQL database:
+      conn = psycopg2.connect(
+          database="uploadFile",
+          user="postgres",
+          password="9629",
+          host="localhost",
+          port="5432"  # Optional, default is 5432
+      )
 
-    return HttpResponse("File uploaded successfully!")
+      # Prepare SQL statement and execute:
+      cursor = conn.cursor()
+      sql = "INSERT INTO files (filename, filepath) VALUES (%s, %s)"
+      cursor.execute(sql, (filename, default_storage.url(filename)))  # Use url for filepath
+      conn.commit()
+
+      return HttpResponse("File uploaded and information stored in database.")
+
+    except Exception as e:
+      # Handle exceptions (e.g., file upload error, database connection error)
+      return HttpResponseBadRequest(f"Error uploading file: {str(e)}")
+
+    finally:
+      # Close database connection if opened
+      if conn:
+        cursor.close()
+        conn.close()
+
   else:
     return HttpResponseBadRequest("Invalid request method")
-  
-  if uploaded_file:
-        filename = uploaded_file.name
-        filepath = default_storage.save(uploaded_file.name, uploaded_file)
-        # Save to database
-        new_file = UploadedFile(filename=filename, filepath=filepath)
-        new_file.save()

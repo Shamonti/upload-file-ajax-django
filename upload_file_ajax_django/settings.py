@@ -78,8 +78,12 @@ WSGI_APPLICATION = 'upload_file_ajax_django.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'uploadFile',
+        'USER': 'postgres',
+        'PASSWORD': '9629',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
